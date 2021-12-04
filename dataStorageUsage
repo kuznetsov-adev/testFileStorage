@@ -1,0 +1,35 @@
+Store key-value pairs with Preferences DataStore
+The Preferences DataStore implementation uses the DataStore and Preferences classes to persist simple key-value pairs to disk.
+
+Create a Preferences DataStore
+Use the property delegate created by preferencesDataStore to create an instance of Datastore<Preferences>. Call it once at the top level of your kotlin file, and access it through this property throughout the rest of your application. This makes it easier to keep your DataStore as a singleton. Alternatively, use RxPreferenceDataStoreBuilder if you're using RxJava. The mandatory name parameter is the name of the Preferences DataStore.
+
+Kotlin
+Java
+
+// At the top level of your kotlin file:
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
+Read from a Preferences DataStore
+Because Preferences DataStore does not use a predefined schema, you must use the corresponding key type function to define a key for each value that you need to store in the DataStore<Preferences> instance. For example, to define a key for an int value, use intPreferencesKey(). Then, use the DataStore.data property to expose the appropriate stored value using a Flow.
+
+Kotlin
+Java
+
+val EXAMPLE_COUNTER = intPreferencesKey("example_counter")
+val exampleCounterFlow: Flow<Int> = context.dataStore.data
+  .map { preferences ->
+    // No type safety.
+    preferences[EXAMPLE_COUNTER] ?: 0
+}
+Write to a Preferences DataStore
+Preferences DataStore provides an edit() function that transactionally updates the data in a DataStore. The function's transform parameter accepts a block of code where you can update the values as needed. All of the code in the transform block is treated as a single transaction.
+
+Kotlin
+Java
+
+suspend fun incrementCounter() {
+  context.dataStore.edit { settings ->
+    val currentCounterValue = settings[EXAMPLE_COUNTER] ?: 0
+    settings[EXAMPLE_COUNTER] = currentCounterValue + 1
+  }
+}
